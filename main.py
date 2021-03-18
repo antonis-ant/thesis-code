@@ -22,7 +22,6 @@ d1_drop_cols = [
     'coldcarc/warmcarc ratio',
 ]
 d1.drop(d1_drop_cols, axis=1, inplace=True)
-
 # Check data after dropping the columns
 print(d1.head(), '\n')
 
@@ -34,7 +33,7 @@ print(f"Number of empty values per column (d1):\n{d1.isna().sum()}")
 # Take a quick look
 print(d2.head(), '\n')
 
-# Specify needed columns
+# Specify needed columns and drop the rest
 d2_keep_cols = [
     'sheepid',
     'mw%',
@@ -49,7 +48,6 @@ d2_keep_cols = [
     'NECK'
 ]
 d2 = d2[d2_keep_cols]
-
 # Check dataset columns
 print(d2.head(), '\n')
 
