@@ -1,67 +1,49 @@
 import pandas as pd
+from sklearn.model_selection import KFold
+from sklearn.multioutput import MultiOutputRegressor
+from sklearn.linear_model import Ridge
+import numpy as np
+from sklearn.model_selection import cross_val_score
 
-# Configure pandas to print all columns horizontally on console.
+# Configure pandas display options
 pd.set_option('display.max_columns', None)
 pd.set_option('display.width', None)
 
-# Load datasets (from excel files).
-d1 = pd.read_excel("data\\dataset-a.xlsx", sheet_name="ECG1A03_new", header=1, nrows=119)
-d2 = pd.read_excel("data\\dataset-b.xlsx", sheet_name="ECG1A04_new", header=1)
+# Load dataset from csv
+data = pd.read_csv("data\\dataset-merged.csv")
+# print(data.head())
 
-# Prepare d1:
-# Take a look at the column names
-print(d1.head(), '\n')
+# Shuffle data
+# data = shuffle(data)
+# print(data.head())
 
-# Drop unneeded columns
-d1_drop_cols = [
-    'slweight(g)',
-    'slweight / 2',
-    'carcass_yield',
-    'Total',
-    'Unnamed: 24',
-    'coldcarc/warmcarc ratio',
-]
-d1.drop(d1_drop_cols, axis=1, inplace=True)
-# Check data after dropping the columns
-print(d1.head(), '\n')
+# Split training samples from labels
+input_cols = ['breed', 'sex', 'slaughgr', 'slweight-kg(INPUT)']
+X = data[input_cols]
+input_cols.append('sheepid')
+Y = data.drop(input_cols, axis=1)
 
-# Look for empty values
-print(f"Number of empty values per column (d1):\n{d1.isna().sum()}")
+# Setup k-fold cross validation
+kfold = KFold(n_splits=5, shuffle=True, random_state=96)
+
+scores = []
+for train_index, test_index in kfold.split(X, Y):
+    # print(f"train: {train_index}\ntest: {test_index}")
+    # Split train and test sets of current iteration
+    X_train, Y_train = X.iloc[train_index], Y.iloc[train_index]
+    X_test, Y_test = X.iloc[test_index], Y.iloc[test_index]
+
+    # Setup Multi-output Linear Regressor (molr)
+    molr_model = MultiOutputRegressor(Ridge(random_state=96)).fit(X_train, Y_train)
+    # pred = molr_model.predict(X_test)
+    # Get regressor score.
+    r2_score = molr_model.score(X_test, Y_test)
+    scores.append(r2_score)
+    print("Score (R2):", r2_score)
+
+print("Average Score (R2):", sum(scores)/kfold.get_n_splits())
+print("Score variance (R2):", np.var(scores))
 
 
-# Prepare d2:
-# Take a quick look
-print(d2.head(), '\n')
 
-# Specify needed columns and drop the rest
-d2_keep_cols = [
-    'sheepid',
-    'mw%',
-    'WtBefDIS',
-    'LEG',
-    'CHUMP',
-    'LOIN',
-    'BREAST',
-    'BESTEND',
-    'MIDNECK',
-    'SHOULDER',
-    'NECK'
-]
-d2 = d2[d2_keep_cols]
-# Check dataset columns
-print(d2.head(), '\n')
-
-# Look for empty values
-print(f"Number of empty values per column (d2):\n{d2.isna().sum()}")
-
-# Merge dataframes on "sheepid"
-merged_df = pd.merge(d1, d2, on='sheepid', how='left')
-print(merged_df.head())
-# Merged dataframe should have (d1+d2-1) columns (-1 because "sheepid" is common on both dfs).
-print(f"d1 column sum: {len(d1.columns)}")
-print(f"d2 column sum: {len(d2.columns)}")
-print(f"merged dataframe column sum: {len(merged_df.columns)}")
-
-# Save merged dataset to csv file
-merged_df.to_csv("data\\dataset-merged.csv", index=False)
 
