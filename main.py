@@ -1,9 +1,20 @@
 import pandas as pd
-from sklearn.model_selection import KFold
-from sklearn.multioutput import MultiOutputRegressor
+
+from sklearn.model_selection import KFold, cross_validate, GridSearchCV
+from sklearn.multioutput import MultiOutputRegressor, RegressorChain
 from sklearn.linear_model import Ridge
-import numpy as np
-from sklearn.model_selection import cross_val_score
+from sklearn.linear_model import LinearRegression
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.svm import LinearSVR
+
+from sklearn.metrics import r2_score
+from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_absolute_percentage_error
+
+from sklearn.preprocessing import MinMaxScaler, StandardScaler
+
+from Records import Records
 
 # Configure pandas display options
 pd.set_option('display.max_columns', None)
@@ -13,37 +24,113 @@ pd.set_option('display.width', None)
 data = pd.read_csv("data\\dataset-merged.csv")
 # print(data.head())
 
-# Shuffle data
-# data = shuffle(data)
-# print(data.head())
-
 # Split training samples from labels
-input_cols = ['breed', 'sex', 'slaughgr', 'slweight-kg(INPUT)']
+input_cols = ['breed', 'sex', 'slaughgr', 'slweight(g)']
 X = data[input_cols]
 input_cols.append('sheepid')
-Y = data.drop(input_cols, axis=1)
-
-# Setup k-fold cross validation
-kfold = KFold(n_splits=5, shuffle=True, random_state=96)
-
-scores = []
-for train_index, test_index in kfold.split(X, Y):
-    # print(f"train: {train_index}\ntest: {test_index}")
-    # Split train and test sets of current iteration
-    X_train, Y_train = X.iloc[train_index], Y.iloc[train_index]
-    X_test, Y_test = X.iloc[test_index], Y.iloc[test_index]
-
-    # Setup Multi-output Linear Regressor (molr)
-    molr_model = MultiOutputRegressor(Ridge(random_state=96)).fit(X_train, Y_train)
-    # pred = molr_model.predict(X_test)
-    # Get regressor score.
-    r2_score = molr_model.score(X_test, Y_test)
-    scores.append(r2_score)
-    print("Score (R2):", r2_score)
-
-print("Average Score (R2):", sum(scores)/kfold.get_n_splits())
-print("Score variance (R2):", np.var(scores))
+y = data.drop(input_cols, axis=1)
 
 
+# Define a custom scorer for multi-output regression
+def mo_reg_scorer(mo_reg_model, X, y):
+    # Get model predictions
+    y_pred = mo_reg_model.predict(X)
+    # R2
+    score_r2 = r2_score(y, y_pred, multioutput='uniform_average')
+    # MAE
+    score_mae = mean_absolute_error(y, y_pred, multioutput='uniform_average')
+    # MSE
+    score_rmse = mean_squared_error(y, y_pred, multioutput='uniform_average', squared=False)
+    # MAPE
+    score_mape = mean_absolute_percentage_error(y, y_pred, multioutput='uniform_average')
+
+    return {'score_r2': score_r2, 'score_mae': score_mae,
+            'score_rmse': score_rmse, 'score_mape': score_mape}
 
 
+def fit_eval_models(X, y, cv, recs, data_prep='none'):
+    # 1. Linear Regression (Inherently multi-output)
+    # Initialize model
+    lr_model = LinearRegression()
+    # Fit & predict using cross validation
+    cv_results = cross_validate(lr_model, X, y, cv=cv, scoring=mo_reg_scorer, return_train_score=True,
+                                return_estimator=True)
+    recs.add_record(cv=cv, cv_results=cv_results, data_prep=data_prep)
+    print(recs.get_last_rec())
+
+    # 2. Decision Tree Regression (Inherently multi-output)
+    dtr_model = DecisionTreeRegressor()
+    # Fit & predict using cross validation
+    cv_results = cross_validate(dtr_model, X, y, cv=cv, scoring=mo_reg_scorer, return_train_score=True,
+                                return_estimator=True)
+    recs.add_record(cv=cv, cv_results=cv_results, data_prep=data_prep)
+    print(recs.get_last_rec())
+
+    # 3. Ridge Regression with MultiOutputRegressor (Meta-regressor)
+    # Initialize model
+    ridge_mo_model = MultiOutputRegressor(Ridge(random_state=96))
+    # Fit & predict using cross validation
+    cv_results = cross_validate(ridge_mo_model, X, y, cv=cv, scoring=mo_reg_scorer, return_train_score=True,
+                                return_estimator=True)
+    # Save results and take a look
+    recs.add_record(cv=cv, cv_results=cv_results, data_prep=data_prep)
+    print(recs.get_last_rec())
+
+    # 4. Linear SVR with MultiOutputRegressor (Meta-regressor)
+    # Initialize model
+    svr_mo_model = MultiOutputRegressor(LinearSVR(max_iter=10000))
+    # Fit & predict using cross validation
+    cv_results = cross_validate(svr_mo_model, X, y, cv=cv, scoring=mo_reg_scorer, return_train_score=True,
+                                return_estimator=True)
+    # Save results and take a look
+    recs.add_record(cv=cv, cv_results=cv_results, data_prep=data_prep)
+    print(recs.get_last_rec())
+
+    # 5. Ridge Regression with RegressorChain (Meta-regressor)
+    # Initialize model
+    ridge_chain_model = RegressorChain(Ridge(random_state=96), order='random')
+    # Fit & predict using cross validation
+    cv_results = cross_validate(ridge_chain_model, X, y, cv=cv, scoring=mo_reg_scorer, return_train_score=True,
+                                return_estimator=True)
+    # Save results and take a look
+    recs.add_record(cv=cv, cv_results=cv_results, data_prep=data_prep)
+    # Save results and take a look
+    print(recs.get_last_rec())
+
+    # 6. Linear SVR Regression with RegressorChain (Meta-regressor)
+    # Initialize model
+    ridge_chain_SVR_model = RegressorChain(LinearSVR(max_iter=10000), order='random')
+    # Fit & predict using cross validation
+    cv_results = cross_validate(ridge_chain_SVR_model, X, y, cv=cv, scoring=mo_reg_scorer, return_train_score=True,
+                                return_estimator=True)
+    # Save results and take a look
+    recs.add_record(cv=cv, cv_results=cv_results, data_prep=data_prep)
+    print(recs.get_last_rec())
+
+
+# Setup cross-validation generator & set k
+cv_k = 5
+cv = KFold(n_splits=cv_k, shuffle=True, random_state=96)
+# Init Records object to be able to format & save the results
+recs = Records()
+
+# Fit & evaluate models & store results
+fit_eval_models(X, y, cv, recs)
+
+# Min-Max Scaling
+min_max_scaler = MinMaxScaler()
+X_scaled = min_max_scaler.fit_transform(X)
+y_scaled = min_max_scaler.fit_transform(y)
+fit_eval_models(X_scaled, y_scaled, cv, recs, data_prep='Scaling (Min-Max)')
+
+# Standard Scaling
+std_scaler = StandardScaler()
+X_scaled = std_scaler.fit_transform(X)
+y_scaled = std_scaler.fit_transform(y)
+fit_eval_models(X_scaled, y_scaled, cv, recs, data_prep='Scaling (Standard)')
+
+# Take a look at all results
+print(recs.get_records(compact=False))
+
+# Export results to csv
+# recs.export_records_csv("results_1.csv")
