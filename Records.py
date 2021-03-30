@@ -16,10 +16,8 @@ class Records:
                 'Average MAPE train score',
                 'Average test time',
                 'Average train time']
-
         # Init records dataframe
         self.model_records = pd.DataFrame(columns=cols)
-
         # A subset of the record columns used for simpler presentation
         self.cols_compact = ['Regressor',
                              'Data_preprocessing',
@@ -29,7 +27,6 @@ class Records:
                              'Average MAPE test score',
                              'Average test time',
                              'Average train time']
-
         # Set directory in which to save results csv file
         self.save_dir = "records\\"
 
