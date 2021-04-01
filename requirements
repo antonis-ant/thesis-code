@@ -1,3 +1,6 @@
 pandas
 pytz
 scikit-learn
+seaborn
+xgboost
+jupyter

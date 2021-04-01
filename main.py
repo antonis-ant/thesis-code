@@ -39,7 +39,7 @@ def mo_reg_scorer(mo_reg_model, X, y, mo='uniform_average'):
     score_r2 = r2_score(y, y_pred, multioutput=mo)
     # MAE
     score_mae = mean_absolute_error(y, y_pred, multioutput=mo)
-    # MSE
+    # RMSE
     score_rmse = mean_squared_error(y, y_pred, multioutput=mo, squared=False)
     # MAPE
     score_mape = mean_absolute_percentage_error(y, y_pred, multioutput=mo)
