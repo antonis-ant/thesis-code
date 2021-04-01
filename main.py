@@ -32,7 +32,7 @@ y = data.drop(input_cols, axis=1)
 
 
 # Define a custom scorer for multi-output regression
-def mo_reg_scorer(mo_reg_model, X, y, mo='uniform_average'):
+def mo_reg_scorer(mo_reg_model, X, y, mo='raw_values'):
     # Get model predictions
     y_pred = mo_reg_model.predict(X)
     # R2
