@@ -211,4 +211,4 @@ fit_eval_models(X_scaled, y_scaled, cv, recs, data_prep='Scaling (Standard)')
 print(recs.get_records())
 
 # Export results to csv
-recs.export_records_csv("results_3.csv")
+# recs.export_records_csv("results_3.csv")
