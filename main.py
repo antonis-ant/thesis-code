@@ -68,7 +68,6 @@ def fit_eval_models(X, y, cv, recs, data_prep='none'):
         "Polynomial SVR (chain)": {"avg_scores": [], "raw_scores": [], "avg_train_scores": [], "raw_train_scores": []},
         "RBF SVR (chain)": {"avg_scores": [], "raw_scores": [], "avg_train_scores": [], "raw_train_scores": []},
         "XGBoost (chain)": {"avg_scores": [], "raw_scores": [], "avg_train_scores": [], "raw_train_scores": []}
-
     }
 
     # 1. Run model for all  cv folds.
@@ -88,6 +87,7 @@ def fit_eval_models(X, y, cv, recs, data_prep='none'):
         cv_results['Linear Regression']["raw_scores"].append(mo_reg_scorer(lr_model, X_test, y_test, mo='raw_values'))
         cv_results['Linear Regression']["avg_train_scores"].append(mo_reg_scorer(lr_model, X_train, y_train))
         cv_results['Linear Regression']["raw_train_scores"].append(mo_reg_scorer(lr_model, X_train, y_train, mo='raw_values'))
+
         # 2. Decision Tree Regressor (Inherently multi-output)
         dtr_model = DecisionTreeRegressor()
         dtr_model.fit(X_train, y_train)
@@ -95,6 +95,7 @@ def fit_eval_models(X, y, cv, recs, data_prep='none'):
         cv_results['Decision Tree Regressor']["raw_scores"].append(mo_reg_scorer(dtr_model, X_test, y_test, mo='raw_values'))
         cv_results['Decision Tree Regressor']["avg_train_scores"].append(mo_reg_scorer(dtr_model, X_train, y_train))
         cv_results['Decision Tree Regressor']["raw_train_scores"].append(mo_reg_scorer(dtr_model, X_train, y_train, mo='raw_values'))
+
         # 3. Random Forest Regressor
         rf_model = RandomForestRegressor()
         rf_model.fit(X_train, y_train)
@@ -113,6 +114,7 @@ def fit_eval_models(X, y, cv, recs, data_prep='none'):
         cv_results['Ridge Regressor (multioutput)']["raw_scores"].append(mo_reg_scorer(ridge_mo_model, X_test, y_test, mo='raw_values'))
         cv_results['Ridge Regressor (multioutput)']["avg_train_scores"].append(mo_reg_scorer(ridge_mo_model, X_train, y_train))
         cv_results['Ridge Regressor (multioutput)']["raw_train_scores"].append(mo_reg_scorer(ridge_mo_model, X_train, y_train, mo='raw_values'))
+
         # 2. Linear SVR
         svr_mo_model = MultiOutputRegressor(LinearSVR())
         svr_mo_model.fit(X_train, y_train)
@@ -120,6 +122,7 @@ def fit_eval_models(X, y, cv, recs, data_prep='none'):
         cv_results['Linear SVR (multioutput)']["raw_scores"].append(mo_reg_scorer(svr_mo_model, X_test, y_test, mo='raw_values'))
         cv_results['Linear SVR (multioutput)']["avg_train_scores"].append(mo_reg_scorer(svr_mo_model, X_train, y_train))
         cv_results['Linear SVR (multioutput)']["raw_train_scores"].append(mo_reg_scorer(svr_mo_model, X_train, y_train, mo='raw_values'))
+
         # 3. Polynomial SVR (3rd degree)
         svr_poly_mo_model = MultiOutputRegressor(SVR(kernel='poly'))
         svr_poly_mo_model.fit(X_train, y_train)
@@ -127,6 +130,7 @@ def fit_eval_models(X, y, cv, recs, data_prep='none'):
         cv_results['Polynomial SVR (multioutput)']["raw_scores"].append(mo_reg_scorer(svr_poly_mo_model, X_test, y_test, mo='raw_values'))
         cv_results['Polynomial SVR (multioutput)']["avg_train_scores"].append(mo_reg_scorer(svr_poly_mo_model, X_train, y_train))
         cv_results['Polynomial SVR (multioutput)']["raw_train_scores"].append(mo_reg_scorer(svr_poly_mo_model, X_train, y_train, mo='raw_values'))
+
         # 4. RBF SVR
         svr_rbf_mo_model = MultiOutputRegressor(SVR(kernel='rbf'))
         svr_rbf_mo_model.fit(X_train, y_train)
@@ -134,6 +138,7 @@ def fit_eval_models(X, y, cv, recs, data_prep='none'):
         cv_results['RBF SVR (multioutput)']["raw_scores"].append(mo_reg_scorer(svr_rbf_mo_model, X_test, y_test, mo='raw_values'))
         cv_results['RBF SVR (multioutput)']["avg_train_scores"].append(mo_reg_scorer(svr_rbf_mo_model, X_train, y_train))
         cv_results['RBF SVR (multioutput)']["raw_train_scores"].append(mo_reg_scorer(svr_rbf_mo_model, X_train, y_train, mo='raw_values'))
+
         # 5. XGBoost
         xgb_mo_model = MultiOutputRegressor(xgb.XGBRegressor(colsample_bytree=0.5, learning_rate=0.1, max_depth=4, n_estimators=90, n_jobs=-1))
         xgb_mo_model.fit(X_train, y_train)
@@ -152,6 +157,7 @@ def fit_eval_models(X, y, cv, recs, data_prep='none'):
         cv_results['Ridge Regressor (chain)']["raw_scores"].append(mo_reg_scorer(ridge_chain_model, X_test, y_test, mo='raw_values'))
         cv_results['Ridge Regressor (chain)']["avg_train_scores"].append(mo_reg_scorer(ridge_chain_model, X_train, y_train))
         cv_results['Ridge Regressor (chain)']["raw_train_scores"].append(mo_reg_scorer(ridge_chain_model, X_train, y_train, mo='raw_values'))
+
         # 2. Linear SVR
         svr_chain_model = RegressorChain(LinearSVR())
         svr_chain_model.fit(X_train, y_train)
@@ -159,6 +165,7 @@ def fit_eval_models(X, y, cv, recs, data_prep='none'):
         cv_results['Linear SVR (chain)']["raw_scores"].append(mo_reg_scorer(svr_chain_model, X_test, y_test, mo='raw_values'))
         cv_results['Linear SVR (chain)']["avg_train_scores"].append(mo_reg_scorer(svr_chain_model, X_train, y_train))
         cv_results['Linear SVR (chain)']["raw_train_scores"].append(mo_reg_scorer(svr_chain_model, X_train, y_train, mo='raw_values'))
+
         # 3. Polynomial SVR (3rd degree)
         svr_poly_chain_model = RegressorChain(SVR(kernel='poly'))
         svr_poly_chain_model.fit(X_train, y_train)
@@ -166,6 +173,7 @@ def fit_eval_models(X, y, cv, recs, data_prep='none'):
         cv_results['Polynomial SVR (chain)']["raw_scores"].append(mo_reg_scorer(svr_poly_chain_model, X_test, y_test, mo='raw_values'))
         cv_results['Polynomial SVR (chain)']["avg_train_scores"].append(mo_reg_scorer(svr_poly_chain_model, X_train, y_train))
         cv_results['Polynomial SVR (chain)']["raw_train_scores"].append(mo_reg_scorer(svr_poly_chain_model, X_train, y_train, mo='raw_values'))
+
         # 4. RBF SVR
         svr_rbf_chain_model = RegressorChain(SVR(kernel='rbf'))
         svr_rbf_chain_model.fit(X_train, y_train)
@@ -173,6 +181,7 @@ def fit_eval_models(X, y, cv, recs, data_prep='none'):
         cv_results['RBF SVR (chain)']["raw_scores"].append(mo_reg_scorer(svr_rbf_chain_model, X_test, y_test, mo='raw_values'))
         cv_results['RBF SVR (chain)']["avg_train_scores"].append(mo_reg_scorer(svr_rbf_chain_model, X_train, y_train))
         cv_results['RBF SVR (chain)']["raw_train_scores"].append(mo_reg_scorer(svr_rbf_chain_model, X_train, y_train, mo='raw_values'))
+
         # 5. XGBoost
         xgb_mo_model = RegressorChain(xgb.XGBRegressor(colsample_bytree=0.5, learning_rate=0.1, max_depth=4, n_estimators=90, n_jobs=-1))
         xgb_mo_model.fit(X_train, y_train)
