@@ -61,7 +61,7 @@ def run_lin_reg_model(X_train, X_test, y_train, y_test):
     }
 
 
-def scores_barplot(scores, y_cols, title='', figsz=(30, 14)):
+def scores_barplot(scores, y_cols, title='', figsz=(25, 14)):
     scores_df = pd.DataFrame(columns=y_cols, data=[scores])
 
     plt.figure(figsize=figsz)
@@ -88,12 +88,11 @@ def plot_feature_imps(feat_imps, X_colnames, y_colnames, subplt_cols=4, figsz=(1
         subplt_count += 1
 
 
-def present_model_results(results, y_cols):
-    # Build dataframe to make results more presentable for notebook
-    res_df = pd.DataFrame({'Model': results['model'],
-                           'R2 score': results['scores']['ua_score_r2'],
-                           'RMSE': results['scores']['ua_score_rmse']
-                           }, index=[0])
-    print(res_df)
-    # display individual rmse barplot
-    scores_barplot(results['scores']['rv_scores_rmse'], y_cols, title=f"Raw RMSE scores ({results['model']})")
+def print_results(results):
+    # Print model scores (uniform average)
+    print(results['model'])
+    print('R2 score:', results['scores']['ua_score_r2'])
+    print('MAE:', results['scores']['ua_score_mae'])
+    print('RMSE:', results['scores']['ua_score_rmse'])
+    print('MAPE:', results['scores']['ua_score_mape'])
+    print()
