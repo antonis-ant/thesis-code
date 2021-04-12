@@ -96,3 +96,54 @@ def print_results(results):
     print('RMSE:', results['scores']['ua_score_rmse'])
     print('MAPE:', results['scores']['ua_score_mape'])
     print()
+
+
+def run_models(X, y, show_plots=True, show_results=True):
+    # Split train test sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=96)
+
+    # Run xgboost model & get results
+    res_xgb = run_xgb_model(X_train, X_test, y_train, y_test)
+    # Run Linear Regression model
+    res_lr = run_lin_reg_model(X_train, X_test, y_train, y_test)
+
+    # Print results
+    if show_results:
+        print_results(res_xgb)
+        print_results(res_lr)
+
+    # Plot individual RMSE scores
+    if show_plots:
+        scores_barplot(res_xgb['scores']['rv_scores_rmse'], y.columns, title='Raw RMSE scores (XGBoost)')
+        scores_barplot(res_lr['scores']['rv_scores_rmse'], y.columns, title='Raw RMSE scores (Linear Regression)')
+
+    return {'xgb': res_xgb, 'lr': res_lr}
+
+
+def try_permutations(X, y):
+    df_cols = ['Output Feature Used',
+               'XGBoost RMSE',
+               'Linear Regression RMSE',
+               'XGBoost R2',
+               'Linear Regression R2']
+    res_df = pd.DataFrame(columns=df_cols)
+
+    for col in y.columns:
+        X_alt = X
+        X_alt[col] = y[[col]]
+        y_alt = y.drop([col], axis=1)
+
+        print('X_alt: ', X_alt.columns)
+        print('y_alt: ', y_alt.columns)
+
+        r = run_models(X_alt, y_alt, show_plots=False, show_results=False)
+
+        res_df = res_df.append({
+            'Output Feature Used': col,
+            'XGBoost RMSE': r['xgb']['scores']['ua_score_rmse'],
+            'Linear Regression RMSE': r['lr']['scores']['ua_score_rmse'],
+            'XGBoost R2': r['xgb']['scores']['ua_score_r2'],
+            'Linear Regression R2': r['lr']['scores']['ua_score_r2']
+        }, ignore_index=True)
+
+    print(res_df)
