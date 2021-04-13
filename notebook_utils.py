@@ -120,30 +120,30 @@ def run_models(X, y, show_plots=True, show_results=True):
     return {'xgb': res_xgb, 'lr': res_lr}
 
 
-def try_permutations(X, y):
-    df_cols = ['Output Feature Used',
-               'XGBoost RMSE',
-               'Linear Regression RMSE',
-               'XGBoost R2',
-               'Linear Regression R2']
-    res_df = pd.DataFrame(columns=df_cols)
-
-    for col in y.columns:
-        X_alt = X
-        X_alt[col] = y[[col]]
-        y_alt = y.drop([col], axis=1)
-
-        print('X_alt: ', X_alt.columns)
-        print('y_alt: ', y_alt.columns)
-
-        r = run_models(X_alt, y_alt, show_plots=False, show_results=False)
-
-        res_df = res_df.append({
-            'Output Feature Used': col,
-            'XGBoost RMSE': r['xgb']['scores']['ua_score_rmse'],
-            'Linear Regression RMSE': r['lr']['scores']['ua_score_rmse'],
-            'XGBoost R2': r['xgb']['scores']['ua_score_r2'],
-            'Linear Regression R2': r['lr']['scores']['ua_score_r2']
-        }, ignore_index=True)
-
-    print(res_df)
+# def try_permutations(X, y):
+#     df_cols = ['Output Feature Used',
+#                'XGBoost RMSE',
+#                'Linear Regression RMSE',
+#                'XGBoost R2',
+#                'Linear Regression R2']
+#     res_df = pd.DataFrame(columns=df_cols)
+#
+#     for col in y.columns:
+#         X_alt = X
+#         X_alt[col] = y[[col]]
+#         y_alt = y.drop([col], axis=1)
+#
+#         print('X_alt: ', X_alt.columns)
+#         print('y_alt: ', y_alt.columns)
+#
+#         r = run_models(X_alt, y_alt, show_plots=False, show_results=False)
+#
+#         res_df = res_df.append({
+#             'Output Feature Used': col,
+#             'XGBoost RMSE': r['xgb']['scores']['ua_score_rmse'],
+#             'Linear Regression RMSE': r['lr']['scores']['ua_score_rmse'],
+#             'XGBoost R2': r['xgb']['scores']['ua_score_r2'],
+#             'Linear Regression R2': r['lr']['scores']['ua_score_r2']
+#         }, ignore_index=True)
+#
+#     print(res_df)
