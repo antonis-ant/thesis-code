@@ -2,13 +2,11 @@ import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-from sklearn.linear_model import Ridge, LinearRegression
+from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split
 import xgboost as xgb
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error, mean_absolute_percentage_error
 from sklearn.multioutput import MultiOutputRegressor
-from sklearn.preprocessing import MinMaxScaler, StandardScaler
-from sklearn.ensemble import RandomForestRegressor
 
 
 # Define Custom scorer that calculates uniform average and raw values scores.
@@ -35,28 +33,40 @@ def mo_reg_scorer(model, X, y):
             'ua_score_mape': ua_score_mape, 'rv_scores_mape': rv_scores_mape}
 
 
-def run_xgb_model(X_train, X_test, y_train, y_test):
+def run_xgb_model(X_train, y_train, X_test=None,  y_test=None):
     # Setup xgb regressor and meta-regressor for multi-output
     xgb_reg = xgb.XGBRegressor(colsample_bytree=0.5, learning_rate=0.1, max_depth=4, n_estimators=90, n_jobs=-1)
     mo_meta_reg = MultiOutputRegressor(xgb_reg)
-    # Fit
     mo_meta_reg.fit(X_train, y_train)
+
+    # If test set is given, predict test set, if not, predict train set.
+    if X_test is None or y_test is None:
+        scores = mo_reg_scorer(mo_meta_reg, X_train, y_train)
+    else:
+        scores = mo_reg_scorer(mo_meta_reg, X_test, y_test)
 
     # Return prediction scores & feature importances
     return {
         'model': "XGBoost",
-        'scores': mo_reg_scorer(mo_meta_reg, X_test, y_test),
+        'scores': scores,
         'feat_imps': np.array([est.feature_importances_ for est in mo_meta_reg.estimators_])
     }
 
 
-def run_lin_reg_model(X_train, X_test, y_train, y_test):
+def run_lin_reg_model(X_train, y_train, X_test=None,  y_test=None):
     lr_model = LinearRegression()
     lr_model.fit(X_train, y_train)
 
+    # If test set is given, predict test set, if not, predict train set.
+    if X_test is None or y_test is None:
+        scores = mo_reg_scorer(lr_model, X_train, y_train)
+    else:
+        scores = mo_reg_scorer(lr_model, X_test, y_test)
+
+    # Return prediction scores & feature importances
     return {
         'model': 'Linear Regression',
-        'scores': mo_reg_scorer(lr_model, X_test, y_test),
+        'scores': scores,
         'feat_imps': lr_model.coef_
     }
 
@@ -100,50 +110,20 @@ def print_results(results):
 
 def run_models(X, y, show_plots=True, show_results=True):
     # Split train test sets
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=96)
+    # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=96)
 
     # Run xgboost model & get results
-    res_xgb = run_xgb_model(X_train, X_test, y_train, y_test)
+    res_xgb = run_xgb_model(X, y)
     # Run Linear Regression model
-    res_lr = run_lin_reg_model(X_train, X_test, y_train, y_test)
+    res_lr = run_lin_reg_model(X, y)
 
     # Print results
     if show_results:
         print_results(res_xgb)
         print_results(res_lr)
-
     # Plot individual RMSE scores
     if show_plots:
         scores_barplot(res_xgb['scores']['rv_scores_rmse'], y.columns, title='Raw RMSE scores (XGBoost)')
         scores_barplot(res_lr['scores']['rv_scores_rmse'], y.columns, title='Raw RMSE scores (Linear Regression)')
 
     return {'xgb': res_xgb, 'lr': res_lr}
-
-
-# def try_permutations(X, y):
-#     df_cols = ['Output Feature Used',
-#                'XGBoost RMSE',
-#                'Linear Regression RMSE',
-#                'XGBoost R2',
-#                'Linear Regression R2']
-#     res_df = pd.DataFrame(columns=df_cols)
-#
-#     for col in y.columns:
-#         X_alt = X
-#         X_alt[col] = y[[col]]
-#         y_alt = y.drop([col], axis=1)
-#
-#         print('X_alt: ', X_alt.columns)
-#         print('y_alt: ', y_alt.columns)
-#
-#         r = run_models(X_alt, y_alt, show_plots=False, show_results=False)
-#
-#         res_df = res_df.append({
-#             'Output Feature Used': col,
-#             'XGBoost RMSE': r['xgb']['scores']['ua_score_rmse'],
-#             'Linear Regression RMSE': r['lr']['scores']['ua_score_rmse'],
-#             'XGBoost R2': r['xgb']['scores']['ua_score_r2'],
-#             'Linear Regression R2': r['lr']['scores']['ua_score_r2']
-#         }, ignore_index=True)
-#
-#     print(res_df)
