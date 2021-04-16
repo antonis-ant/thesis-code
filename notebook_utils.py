@@ -73,6 +73,7 @@ def run_lin_reg_model(X_train, y_train, X_test=None,  y_test=None):
 
 def scores_barplot(scores, y_cols, title='', figsz=(25, 14)):
     scores_df = pd.DataFrame(columns=y_cols, data=[scores])
+    scores_df.sort_values(0, axis=1, inplace=True)
 
     plt.figure(figsize=figsz)
     plt.title(title)
