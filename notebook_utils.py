@@ -76,7 +76,14 @@ def scores_barplot(scores, y_cols, title='', figsz=(25, 14)):
 
     plt.figure(figsize=figsz)
     plt.title(title)
-    sns.barplot(data=scores_df)
+    splot = sns.barplot(data=scores_df)
+    for p in splot.patches:
+        splot.annotate(format(p.get_height(), '.3f'),
+                       (p.get_x() + p.get_width() / 2., p.get_height()),
+                       ha='center', va='center',
+                       xytext=(0, 9),
+                       textcoords='offset points')
+    plt.show()
 
 
 def plot_feature_imps(feat_imps, X_colnames, y_colnames, subplt_cols=4, figsz=(18, 25)):
@@ -108,14 +115,20 @@ def print_results(results):
     print()
 
 
-def run_models(X, y, show_plots=True, show_results=True):
-    # Split train test sets
-    # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=96)
+def run_models(X, y, tt_split_ratio=None, show_plots=True, show_results=True):
 
-    # Run xgboost model & get results
-    res_xgb = run_xgb_model(X, y)
-    # Run Linear Regression model
-    res_lr = run_lin_reg_model(X, y)
+    if tt_split_ratio is None:
+        # Run xgboost model & get results
+        res_xgb = run_xgb_model(X, y)
+        # Run Linear Regression model
+        res_lr = run_lin_reg_model(X, y)
+    else:
+        # Split train test sets
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=tt_split_ratio, random_state=96)
+        # Run xgboost model & get results
+        res_xgb = run_xgb_model(X_train, y_train, X_test, y_test)
+        # Run Linear Regression model
+        res_lr = run_lin_reg_model(X_train, y_train, X_test, y_test)
 
     # Print results
     if show_results:
@@ -123,7 +136,7 @@ def run_models(X, y, show_plots=True, show_results=True):
         print_results(res_lr)
     # Plot individual RMSE scores
     if show_plots:
-        scores_barplot(res_xgb['scores']['rv_scores_rmse'], y.columns, title='Raw RMSE scores (XGBoost)')
-        scores_barplot(res_lr['scores']['rv_scores_rmse'], y.columns, title='Raw RMSE scores (Linear Regression)')
+        scores_barplot(res_xgb['scores']['rv_scores_mape'], y.columns, title='Raw MAPE scores (XGBoost)')
+        scores_barplot(res_lr['scores']['rv_scores_mape'], y.columns, title='Raw MAPE scores (Linear Regression)')
 
     return {'xgb': res_xgb, 'lr': res_lr}
