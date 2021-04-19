@@ -91,21 +91,20 @@ regressors = {
     'Linear Regression': LinearRegression(),
     'Decision Tree Regressor': DecisionTreeRegressor(),
     'Random Forest Regressor': RandomForestRegressor(),
-
     # Using multi-output meta-regressor
     'Ridge Regressor (multioutput)': MultiOutputRegressor(Ridge(random_state=96)),
     'Linear SVR (multioutput)': MultiOutputRegressor(LinearSVR()),
     'Polynomial SVR (multioutput)': MultiOutputRegressor(SVR(kernel='poly')),
     'RBF SVR (multioutput)': MultiOutputRegressor(SVR(kernel='rbf')),
     'XGBoost (multioutput)': MultiOutputRegressor(xgb.XGBRegressor(colsample_bytree=0.5, learning_rate=0.1,
-                                                                    max_depth=4, n_estimators=90, n_jobs=-1)),
-    # Using regressor chain with random prediction ordering
+                                                                   max_depth=4, n_estimators=90, n_jobs=-1)),
+    # Using regressor chain
     'Ridge Regressor (chain)': RegressorChain(Ridge(random_state=96)),
     'Linear SVR (chain)': RegressorChain(LinearSVR()),
     'Polynomial SVR (chain)': RegressorChain(SVR(kernel='poly')),
     'RBF SVR (chain)': RegressorChain(SVR(kernel='rbf')),
     'XGBoost (chain)': RegressorChain(xgb.XGBRegressor(colsample_bytree=0.5, learning_rate=0.1,
-                                                        max_depth=4, n_estimators=90, n_jobs=-1))
+                                                       max_depth=4, n_estimators=90, n_jobs=-1))
 }
 # Setup cross-validation generator
 n_folds = 5

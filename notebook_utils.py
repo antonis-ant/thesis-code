@@ -30,7 +30,8 @@ def mo_reg_scorer(model, X, y):
     return {'ua_score_r2': ua_score_r2, 'rv_scores_r2': rv_scores_r2,
             'ua_score_mae': ua_score_mae, 'rv_scores_mae': rv_scores_mae,
             'ua_score_rmse': ua_score_rmse, 'rv_scores_rmse': rv_scores_rmse,
-            'ua_score_mape': ua_score_mape, 'rv_scores_mape': rv_scores_mape}
+            'ua_score_mape': ua_score_mape, 'rv_scores_mape': rv_scores_mape,
+            'predictions': y_pred}
 
 
 def run_xgb_model(X_train, y_train, X_test=None,  y_test=None):
