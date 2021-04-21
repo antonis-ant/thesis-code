@@ -74,11 +74,11 @@ def run_lin_reg_model(X_train, y_train, X_test=None,  y_test=None):
 
 def scores_barplot(scores, y_cols, title='', figsz=(25, 14)):
     scores_df = pd.DataFrame(columns=y_cols, data=[scores])
-    scores_df.sort_values(0, axis=1, inplace=True)
+    scores_sorted = scores_df.sort_values(0, axis=1, inplace=False)
 
     plt.figure(figsize=figsz)
     plt.title(title)
-    splot = sns.barplot(data=scores_df)
+    splot = sns.barplot(data=scores_sorted)
     for p in splot.patches:
         splot.annotate(format(p.get_height(), '.3f'),
                        (p.get_x() + p.get_width() / 2., p.get_height()),
@@ -86,6 +86,8 @@ def scores_barplot(scores, y_cols, title='', figsz=(25, 14)):
                        xytext=(0, 9),
                        textcoords='offset points')
     plt.show()
+
+    # return scores_sorted
 
 
 def plot_feature_imps(feat_imps, X_colnames, y_colnames, subplt_cols=4, figsz=(18, 25)):
