@@ -64,7 +64,7 @@ def run_lin_reg_model(X_train, y_train, X_test=None,  y_test=None):
     else:
         scores = mo_reg_scorer(lr_model, X_test, y_test)
 
-    # Return prediction scores & feature importances
+    # Return model name, prediction scores & feature importances
     return {
         'model': 'Linear Regression',
         'scores': scores,
@@ -72,13 +72,14 @@ def run_lin_reg_model(X_train, y_train, X_test=None,  y_test=None):
     }
 
 
-def scores_barplot(scores, y_cols, title='', figsz=(25, 14)):
+def scores_barplot(scores, y_cols, title='', figsz=(25, 14), sort=True):
     scores_df = pd.DataFrame(columns=y_cols, data=[scores])
-    scores_sorted = scores_df.sort_values(0, axis=1, inplace=False)
+    if sort:
+        scores_df = scores_df.sort_values(0, axis=1, inplace=False)
 
     plt.figure(figsize=figsz)
     plt.title(title)
-    splot = sns.barplot(data=scores_sorted)
+    splot = sns.barplot(data=scores_df)
     for p in splot.patches:
         splot.annotate(format(p.get_height(), '.3f'),
                        (p.get_x() + p.get_width() / 2., p.get_height()),
@@ -88,6 +89,25 @@ def scores_barplot(scores, y_cols, title='', figsz=(25, 14)):
     plt.show()
 
     # return scores_sorted
+
+
+def plot_1_vs_all_feat_imps(feat_imps, subplt_cols=4, figsz=(18, 25)):
+    # Init & configure figure
+    fig = plt.figure(figsize=figsz)
+    fig.subplots_adjust(hspace=0.1, wspace=0.3)
+    # Keep track of number of subplots
+    subplt_count = 0
+    n_subplots = len(feat_imps)
+    # Set number of rows based on specified number of columns
+    subplt_rows = int(np.ceil(n_subplots / subplt_cols))
+    # Build plots
+    sns.set(font_scale=1.5)
+    for feat_imp_df in feat_imps:
+        ax = fig.add_subplot(subplt_rows, subplt_cols, subplt_count + 1)
+        ax.set_title(feat_imp_df.index[0], fontsize=20)
+        sns.barplot(data=feat_imp_df, ax=ax, orient="h")
+        subplt_count += 1
+    plt.show()
 
 
 def plot_feature_imps(feat_imps, X_colnames, y_colnames, subplt_cols=4, figsz=(18, 25)):
@@ -138,7 +158,7 @@ def run_models(X, y, tt_split_ratio=None, show_plots=True, show_results=True):
     if show_results:
         print_results(res_xgb)
         print_results(res_lr)
-    # Plot individual RMSE scores
+    # Plot individual MAPE scores
     if show_plots:
         scores_barplot(res_xgb['scores']['rv_scores_mape'], y.columns, title='Raw MAPE scores (XGBoost)')
         scores_barplot(res_lr['scores']['rv_scores_mape'], y.columns, title='Raw MAPE scores (Linear Regression)')
