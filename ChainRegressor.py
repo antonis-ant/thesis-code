@@ -1,10 +1,9 @@
 import pandas as pd
-import numpy as np
 
 
 class ChainRegressor:
     """
-    Implements a chain regressor
+    Implements a custom chain regressor that allows for different models to be used on each phase of the chain.
     """
     def __init__(self, chain_links):
         """
@@ -13,7 +12,7 @@ class ChainRegressor:
 
         @param chain_links: an array of tuples where each tuple contains the model and the corresponding dependent
          variables we want to predict with it.
-        e.g. chain_links = [(LinearRegression(), ['var1', 'var2',..]), ([..., ...]), ...]
+         For example: chain_links = [(LinearRegression(), ['dependent_var1', 'dependent_var2',..]), ([..., ...]), ...]
         """
         self.chain_links = chain_links[:]
         self.original_cols = None
@@ -27,7 +26,7 @@ class ChainRegressor:
         @return: the tuple containing the now trained models and the features they are trained for.
         """
         Xi = X.loc[:]
-        # Grab the original column order to maintain the same order on the predicted variables
+        # Grab the original columns to maintain the same order on the predicted variables
         self.original_cols = y.columns.tolist()
         for model, cols in self.chain_links:
             yi = y[cols]
@@ -61,14 +60,3 @@ class ChainRegressor:
         # Return predictions as numpy array for compatibility with scikit-learn functions
         return predictions.to_numpy()
 
-    # def get_chain_order(self):
-    #     """
-    #     Return column names of predicted targets in the order with which they were predicted.
-    #     Might come useful for presentation purposes
-    #     @return: A list containing the column names in the order they where predicted
-    #     """
-    #     chain_col_order = []
-    #     for cl in self.chain_links:
-    #         chain_col_order += cl[1]
-    #
-    #     return chain_col_order

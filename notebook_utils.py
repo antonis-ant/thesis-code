@@ -9,8 +9,16 @@ from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error, m
 from sklearn.multioutput import MultiOutputRegressor
 
 
-# Define Custom scorer that calculates uniform average and raw values scores.
 def mo_reg_scorer(model, X, y):
+    """
+    A custom scorer to be used for multi-output regression model executions. Calculates both uniform average
+    and raw value scores for r2 score, MAE, RMSE & MAPE.
+
+    @param model: the trained model to get scores for.
+    @param X: the independent variables to be predicted.
+    @param y: the actual labels to compare with model predictions and get scores.
+    @return: a dictionary containing the aforementioned scores and the actual predictions.
+    """
     y_pred = model.predict(X)
 
     # Calculate both Uniform average (ua) & raw values (rv) scores/errors
@@ -54,7 +62,7 @@ def run_xgb_model(X_train, y_train, X_test=None,  y_test=None):
     }
 
 
-def run_lin_reg_model(X_train, y_train, X_test=None,  y_test=None):
+def run_lin_reg_model(X_train, y_train, X_test=None, y_test=None, scale_feat_imps=True):
     lr_model = LinearRegression()
     lr_model.fit(X_train, y_train)
 
@@ -64,12 +72,63 @@ def run_lin_reg_model(X_train, y_train, X_test=None,  y_test=None):
     else:
         scores = mo_reg_scorer(lr_model, X_test, y_test)
 
+    # Get absolute values of model coefficients
+    feat_imps = abs(lr_model.coef_)
+
+    # Normalize coefficients (if specified)
+    if scale_feat_imps:
+        feat_imps = normalize(feat_imps)
+
     # Return model name, prediction scores & feature importances
     return {
         'model': 'Linear Regression',
         'scores': scores,
-        'feat_imps': lr_model.coef_
+        'feat_imps': feat_imps
     }
+
+
+def run_models(X, y, tt_split_ratio=None, show_err_plots=True, show_featimp_plots=False, show_results=True):
+
+    if tt_split_ratio is None:
+        # Run xgboost model & get results
+        res_xgb = run_xgb_model(X, y)
+        # Run Linear Regression model
+        res_lr = run_lin_reg_model(X, y)
+    else:
+        # Split train test sets
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=tt_split_ratio, random_state=96)
+        # Run xgboost model & get results
+        res_xgb = run_xgb_model(X_train, y_train, X_test, y_test)
+        # Run Linear Regression model
+        res_lr = run_lin_reg_model(X_train, y_train, X_test, y_test)
+
+    # Print results
+    if show_results:
+        print_results(res_xgb)
+        print_results(res_lr)
+    # Plot individual MAPE scores
+    if show_err_plots:
+        scores_barplot(res_xgb['scores']['rv_scores_mape'], y.columns, title='Raw MAPE scores (XGBoost)')
+        scores_barplot(res_lr['scores']['rv_scores_mape'], y.columns, title='Raw MAPE scores (Linear Regression)')
+    # Plot feature importances
+    if show_featimp_plots:
+        plot_feature_imps(res_xgb['feat_imps'], X.columns, y.columns)
+        plot_feature_imps(res_lr['feat_imps'], X.columns, y.columns)
+
+    return {'xgb': res_xgb, 'lr': res_lr}
+
+
+def normalize(feat_imps):
+    """
+    Normalize feature importances such that they add up to 1.
+
+    @param feat_imps: feature importances list ([[f1,f2,...]]) to be normalized.
+    @return: normalized feature importances.
+    """
+    feat_imps = np.transpose(feat_imps)
+    feat_imps_norm = feat_imps * (1 / feat_imps.sum(axis=0))
+
+    return np.transpose(feat_imps_norm)
 
 
 def scores_barplot(scores, y_cols, title='', figsz=(25, 14), sort=True):
@@ -79,6 +138,7 @@ def scores_barplot(scores, y_cols, title='', figsz=(25, 14), sort=True):
 
     plt.figure(figsize=figsz)
     plt.title(title)
+    sns.set(font_scale=1.2)
     splot = sns.barplot(data=scores_df)
     for p in splot.patches:
         splot.annotate(format(p.get_height(), '.3f'),
@@ -103,6 +163,7 @@ def plot_1_vs_all_feat_imps(feat_imps, subplt_cols=4, figsz=(18, 25)):
     # Build plots
     sns.set(font_scale=1.5)
     for feat_imp_df in feat_imps:
+        # feat_imp_df = feat_imp_df.sort_values(0, axis=0, inplace=False)
         ax = fig.add_subplot(subplt_rows, subplt_cols, subplt_count + 1)
         ax.set_title(feat_imp_df.index[0], fontsize=20)
         sns.barplot(data=feat_imp_df, ax=ax, orient="h")
@@ -130,6 +191,12 @@ def plot_feature_imps(feat_imps, X_colnames, y_colnames, subplt_cols=4, figsz=(1
 
 
 def print_results(results):
+    """
+    Print results of model ran. Used only for results of functions "run_lin_reg_model", "run_xgb_model"
+    and "run_models".
+
+    @param results: a dictionary returned by aforementioned functions holding the model title and the scores.
+    """
     # Print model scores (uniform average)
     print(results['model'])
     print('R2 score:', results['scores']['ua_score_r2'])
@@ -139,28 +206,19 @@ def print_results(results):
     print()
 
 
-def run_models(X, y, tt_split_ratio=None, show_plots=True, show_results=True):
+def print_avg_scores(scores, model=''):
+    """
+    A general function for presenting model average scores only if "mo_reg_scorer" is used to get them.
 
-    if tt_split_ratio is None:
-        # Run xgboost model & get results
-        res_xgb = run_xgb_model(X, y)
-        # Run Linear Regression model
-        res_lr = run_lin_reg_model(X, y)
-    else:
-        # Split train test sets
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=tt_split_ratio, random_state=96)
-        # Run xgboost model & get results
-        res_xgb = run_xgb_model(X_train, y_train, X_test, y_test)
-        # Run Linear Regression model
-        res_lr = run_lin_reg_model(X_train, y_train, X_test, y_test)
+    @param scores: the scores returned from "mo_reg_scorer".
+    @param model: the model name (title).
+    """
+    print(model)
+    print('R2 score:', scores['ua_score_r2'])
+    print('MAE:', scores['ua_score_mae'])
+    print('RMSE:', scores['ua_score_rmse'])
+    print('MAPE:', scores['ua_score_mape'])
+    print()
 
-    # Print results
-    if show_results:
-        print_results(res_xgb)
-        print_results(res_lr)
-    # Plot individual MAPE scores
-    if show_plots:
-        scores_barplot(res_xgb['scores']['rv_scores_mape'], y.columns, title='Raw MAPE scores (XGBoost)')
-        scores_barplot(res_lr['scores']['rv_scores_mape'], y.columns, title='Raw MAPE scores (Linear Regression)')
 
-    return {'xgb': res_xgb, 'lr': res_lr}
+
