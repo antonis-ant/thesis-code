@@ -1,3 +1,8 @@
+"""
+This script contains utility functions that are used on the jupyter notebooks to automate functionalities such as
+graph representations of the results, model scoring e.t.c.
+"""
+
 import pandas as pd
 import numpy as np
 import seaborn as sns

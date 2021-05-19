@@ -2,6 +2,10 @@ import pandas as pd
 
 
 class Records:
+    """
+    The Records class is used to average cross validation error scores for multiple
+    models and then organize said results in a more interpretable form as a dataframe.
+    """
     def __init__(self):
         # Names of the datasets' output column titles
         self.y_col_titles = ['woolfr', 'blood', 'feet', 'pelt', 'fullGI', 'mesent', 'epipl', 'liver',
@@ -17,6 +21,12 @@ class Records:
         self.records_dir = "records\\"
 
     def _build_cols(self, y_cols):
+        """
+        Build the final form of the error scores representation.
+
+        @param y_cols: the names of the individual dependent variables.
+        @return: a list containing the column structure to be used for building the results dataframe.
+        """
         cols = ['Regressor',
                 'Data preprocessing',
                 'Average R2 score',
@@ -42,6 +52,13 @@ class Records:
         return cols
 
     def add_records(self, cv_results, data_prep='none'):
+        """
+        Average cv error scores and add to results dataframe
+
+        @param cv_results: the cv results
+        @param data_prep: type of data preprocessing used.
+
+        """
         # For each model ran:
         for key in cv_results:
             # Init dictionary to hold results
@@ -96,12 +113,27 @@ class Records:
         # print(self.model_records)
 
     def get_last_rec(self):
+        """
+        Return most recent record
+
+        @return: the most recent record
+        """
         return self.model_records.tail(1)
 
     def get_records(self):
+        """
+        Get whole records dataframe.
+
+        @return: the records dataframe.
+        """
         return self.model_records
 
     def export_records_csv(self, filename):
+        """
+        Export records dataframe to csv file.
+
+        @param filename: the name of the csv file to be created.
+        """
         path = self.records_dir + filename
         self.model_records.to_csv(path, index=False)
 

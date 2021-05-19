@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 from sklearn.model_selection import KFold
 from sklearn.multioutput import MultiOutputRegressor, RegressorChain
 from sklearn.linear_model import Ridge
@@ -98,16 +97,17 @@ regressors = {
     'RBF SVR (multioutput)': MultiOutputRegressor(SVR(kernel='rbf')),
     'XGBoost (multioutput)': MultiOutputRegressor(xgb.XGBRegressor(colsample_bytree=0.5, learning_rate=0.1,
                                                                    max_depth=4, n_estimators=90, n_jobs=-1)),
-    # Using regressor chain
-    'Ridge Regressor (chain)': RegressorChain(Ridge(random_state=96)),
-    'Linear SVR (chain)': RegressorChain(LinearSVR()),
-    'Polynomial SVR (chain)': RegressorChain(SVR(kernel='poly')),
-    'RBF SVR (chain)': RegressorChain(SVR(kernel='rbf')),
-    'XGBoost (chain)': RegressorChain(xgb.XGBRegressor(colsample_bytree=0.5, learning_rate=0.1,
-                                                       max_depth=4, n_estimators=90, n_jobs=-1))
+    # # Using regressor chain
+    # 'Ridge Regressor (chain)': RegressorChain(Ridge(random_state=96), order='random'),
+    # 'Linear SVR (chain)': RegressorChain(LinearSVR(), order='random'),
+    # 'Polynomial SVR (chain)': RegressorChain(SVR(kernel='poly'), order='random'),
+    # 'RBF SVR (chain)': RegressorChain(SVR(kernel='rbf'), order='random'),
+    # 'XGBoost (chain)': RegressorChain(xgb.XGBRegressor(colsample_bytree=0.5, learning_rate=0.1,
+    #                                                    max_depth=4, n_estimators=90, n_jobs=-1), order='random')
 }
+
 # Setup cross-validation generator
-n_folds = 5
+n_folds = 2
 cv = KFold(n_splits=n_folds, shuffle=True, random_state=96)
 # Init Records object to be able to format & save the results
 recs = Records()
@@ -117,12 +117,13 @@ recs = Records()
 fit_eval_models(X, y, regressors, cv, recs)
 
 # B. Scaling
-# Min-Max Scaling
+# i) Min-Max Scaling
 min_max_scaler = MinMaxScaler()
 X_scaled = pd.DataFrame(min_max_scaler.fit_transform(X), columns=X.columns)
 y_scaled = pd.DataFrame(min_max_scaler.fit_transform(y), columns=y.columns)
 fit_eval_models(X_scaled, y_scaled, regressors, cv, recs, data_prep='Scaling (Min-Max)')
-# Standard Scaling
+
+# ii) Standard Scaling
 std_scaler = StandardScaler()
 X_scaled = pd.DataFrame(std_scaler.fit_transform(X), columns=X.columns)
 y_scaled = pd.DataFrame(std_scaler.fit_transform(y), columns=y.columns)
@@ -132,4 +133,4 @@ fit_eval_models(X_scaled, y_scaled, regressors, cv, recs, data_prep='Scaling (St
 print(recs.get_records())
 
 # Export results to csv
-# recs.export_records_csv("results_4.csv")
+recs.export_records_csv("results_6.csv")
