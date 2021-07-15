@@ -12,6 +12,8 @@ from sklearn.model_selection import train_test_split
 import xgboost as xgb
 from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error, mean_absolute_percentage_error
 from sklearn.multioutput import MultiOutputRegressor
+from sklearn.preprocessing import StandardScaler, MinMaxScaler
+
 
 
 def mo_reg_scorer(model, X, y):
@@ -224,6 +226,52 @@ def print_avg_scores(scores, model=''):
     print('RMSE:', scores['ua_score_rmse'])
     print('MAPE:', scores['ua_score_mape'])
     print()
+
+
+def scale_split_labels(data, scaling='std'):
+    """
+    Scale data and separate independent variables from target variables
+    @param scaling: can be 'std', 'min-max' or None for no scaling
+    @param data: the dataset
+    @return: X:independent vars, y:dependent vars
+    """
+    if scaling == 'std':
+        # Scale dataset
+        scaler = StandardScaler()
+        dd = pd.DataFrame(scaler.fit_transform(data), columns=data.columns)
+    elif scaling == 'min-max':
+        scaler = MinMaxScaler()
+        dd = pd.DataFrame(scaler.fit_transform(data), columns=data.columns)
+    else:
+        dd = pd.DataFrame(data, columns=data.columns)
+
+    # Split independent variables from target variables
+    input_cols = ['slweight(g)']
+    X = dd[input_cols]
+    y = dd.drop(input_cols, axis=1)
+
+    return X, y
+
+
+def split_train_test(X, y, test_size=0.2, strat=None):
+    """
+    Split to train & test sets and then reset indices.
+
+    @param X: train features
+    @param y: target variables
+    @param test_size: test set size to split
+    @param strat: stratification method, (default is "None")
+    @return: the now split data
+    """
+    # TrainTestSplit
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=96, stratify=strat)
+    # Reset indices
+    X_train.reset_index(inplace=True, drop=True)
+    X_test.reset_index(inplace=True, drop=True)
+    y_train.reset_index(inplace=True, drop=True)
+    y_test.reset_index(inplace=True, drop=True)
+
+    return X_train, X_test, y_train, y_test
 
 
 
