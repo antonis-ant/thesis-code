@@ -156,29 +156,48 @@ def scores_barplot(scores, y_cols, title='', figsz=(25, 14), sort=True):
     plt.show()
 
     # return scores_sorted
+#
+# def comp_scores_barplot(scores1, scores2, y_cols, figsz=(25,14)):
+#     d = {
+#         'variable': np.append(y_cols.to_numpy(), y_cols.to_numpy()),
+#         'score': np.append(scores1, scores2),
+#         'algorithm': np.append(np.full(26, 'Linear Regression'), np.full(26, 'XGBoost'))
+#     }
+#
+#     comp_df = pd.DataFrame(columns=['variable', 'score', 'algorithm'], data=d)
+#     comp_df = comp_df.groupby(['variable', 'algorithm']).agg(mean_mape_score=('score', 'mean'))
+#     comp_df = comp_df.reset_index()
+#     # print(comp_df)
+#
+#     sns.barplot(x='variable',
+#                 y='mean_mape_score',
+#                 hue='algorithm',
+#                 data=comp_df
+#                 )
 
 
-def plot_1_vs_all_feat_imps(feat_imps, subplt_cols=4, figsz=(18, 25)):
+def plot_1_vs_all_feat_imps(feat_imps, subplt_cols=4, figsz=(18, 25), fontsize=16, headersize=28):
     # Init & configure figure
     fig = plt.figure(figsize=figsz)
-    fig.subplots_adjust(hspace=0.1, wspace=0.3)
+    fig.subplots_adjust(hspace=0.1, wspace=0.8)
     # Keep track of number of subplots
     subplt_count = 0
     n_subplots = len(feat_imps)
     # Set number of rows based on specified number of columns
     subplt_rows = int(np.ceil(n_subplots / subplt_cols))
     # Build plots
-    sns.set(font_scale=1.5)
+    # sns.set(font_scale=fontscl)
     for feat_imp_df in feat_imps:
         # feat_imp_df = feat_imp_df.sort_values(0, axis=0, inplace=False)
         ax = fig.add_subplot(subplt_rows, subplt_cols, subplt_count + 1)
-        ax.set_title(feat_imp_df.index[0], fontsize=20)
-        sns.barplot(data=feat_imp_df, ax=ax, orient="h")
+        ax.set_title(feat_imp_df.index[0], fontsize=headersize)
+        bp = sns.barplot(data=feat_imp_df, ax=ax, orient="h")
+        bp.tick_params(labelsize=fontsize)
         subplt_count += 1
     plt.show()
 
 
-def plot_feature_imps(feat_imps, X_colnames, y_colnames, subplt_cols=4, figsz=(18, 25)):
+def plot_feature_imps(feat_imps, X_colnames, y_colnames, subplt_cols=3, figsz=(15, 25)):
     # Init & configure figure
     fig = plt.figure(figsize=figsz)
     fig.subplots_adjust(hspace=0.5, wspace=0.2)
@@ -193,7 +212,8 @@ def plot_feature_imps(feat_imps, X_colnames, y_colnames, subplt_cols=4, figsz=(1
         df = pd.DataFrame(data=[fi], columns=X_colnames)
         ax = fig.add_subplot(subplt_rows, subplt_cols, subplt_count + 1)
         ax.set_title(y_colnames[subplt_count])
-        sns.barplot(data=df, ax=ax)
+        bp = sns.barplot(data=df, ax=ax)
+        bp.tick_params(labelsize=14)
         subplt_count += 1
 
 
@@ -240,7 +260,7 @@ def scale_split_labels(data, scaling='std'):
         scaler = StandardScaler()
         dd = pd.DataFrame(scaler.fit_transform(data), columns=data.columns)
     elif scaling == 'min-max':
-        scaler = MinMaxScaler()
+        scaler = MinMaxScaler(feature_range=(1, 2))
         dd = pd.DataFrame(scaler.fit_transform(data), columns=data.columns)
     else:
         dd = pd.DataFrame(data, columns=data.columns)
