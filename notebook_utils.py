@@ -138,21 +138,35 @@ def normalize(feat_imps):
     return np.transpose(feat_imps_norm)
 
 
-def scores_barplot(scores, y_cols, title='', figsz=(25, 14), sort=True):
+def scores_barplot(scores, y_cols, title='', figsz=(14, 10), sort=True):
+    # Create dataframe to hold the data & use in barplot
     scores_df = pd.DataFrame(columns=y_cols, data=[scores])
+    # Sort scores if true
     if sort:
         scores_df = scores_df.sort_values(0, axis=1, inplace=False)
 
+    # Initialize plot
     plt.figure(figsize=figsz)
-    plt.title(title)
-    sns.set(font_scale=1.2)
-    splot = sns.barplot(data=scores_df)
+    plt.title(title, fontsize=18)
+    # Initialize sns barplot
+    splot = sns.barplot(data=scores_df, orient='h', color='b')
+    splot.tick_params(labelsize=16)
+
+    # Add score annotations on bars
     for p in splot.patches:
-        splot.annotate(format(p.get_height(), '.3f'),
-                       (p.get_x() + p.get_width() / 2., p.get_height()),
-                       ha='center', va='center',
-                       xytext=(0, 9),
-                       textcoords='offset points')
+        width = p.get_width()
+        plt.text(0.13 + p.get_width(),
+                 p.get_y() + 0.55*p.get_height(),
+                 '{:1.3f}'.format(width),
+                 ha='center', va='center',
+                 fontsize=14)
+
+
+    # splot.annotate(format(p.get_height(), '.3f'),
+    #                (p.get_x() + p.get_width() / 2., p.get_height()),
+    #                ha='center', va='center',
+    #                xytext=(0, 9),
+    #                textcoords='offset points')
     plt.show()
 
     # return scores_sorted
