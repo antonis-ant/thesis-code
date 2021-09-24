@@ -138,7 +138,7 @@ def normalize(feat_imps):
     return np.transpose(feat_imps_norm)
 
 
-def scores_barplot(scores, y_cols, title='', figsz=(14, 10), sort=True):
+def scores_barplot(scores, y_cols, title='', figsz=(14, 10), sort=True, annot_dist=0.13):
     # Create dataframe to hold the data & use in barplot
     scores_df = pd.DataFrame(columns=y_cols, data=[scores])
     # Sort scores if true
@@ -155,7 +155,7 @@ def scores_barplot(scores, y_cols, title='', figsz=(14, 10), sort=True):
     # Add score annotations on bars
     for p in splot.patches:
         width = p.get_width()
-        plt.text(0.13 + p.get_width(),
+        plt.text(annot_dist + p.get_width(),
                  p.get_y() + 0.55*p.get_height(),
                  '{:1.3f}'.format(width),
                  ha='center', va='center',
@@ -170,30 +170,12 @@ def scores_barplot(scores, y_cols, title='', figsz=(14, 10), sort=True):
     plt.show()
 
     # return scores_sorted
-#
-# def comp_scores_barplot(scores1, scores2, y_cols, figsz=(25,14)):
-#     d = {
-#         'variable': np.append(y_cols.to_numpy(), y_cols.to_numpy()),
-#         'score': np.append(scores1, scores2),
-#         'algorithm': np.append(np.full(26, 'Linear Regression'), np.full(26, 'XGBoost'))
-#     }
-#
-#     comp_df = pd.DataFrame(columns=['variable', 'score', 'algorithm'], data=d)
-#     comp_df = comp_df.groupby(['variable', 'algorithm']).agg(mean_mape_score=('score', 'mean'))
-#     comp_df = comp_df.reset_index()
-#     # print(comp_df)
-#
-#     sns.barplot(x='variable',
-#                 y='mean_mape_score',
-#                 hue='algorithm',
-#                 data=comp_df
-#                 )
 
 
-def plot_1_vs_all_feat_imps(feat_imps, subplt_cols=4, figsz=(18, 25), fontsize=16, headersize=28):
+def plot_1_vs_all_feat_imps(feat_imps, subplt_cols=4, figsz=(18, 25), fontsize=16, headersize=28, spacing=(0.1, 0.7)):
     # Init & configure figure
     fig = plt.figure(figsize=figsz)
-    fig.subplots_adjust(hspace=0.1, wspace=0.8)
+    fig.subplots_adjust(hspace=spacing[0], wspace=spacing[1])
     # Keep track of number of subplots
     subplt_count = 0
     n_subplots = len(feat_imps)
@@ -225,7 +207,7 @@ def plot_feature_imps(feat_imps, X_colnames, y_colnames, subplt_cols=3, figsz=(1
     for fi in feat_imps:
         df = pd.DataFrame(data=[fi], columns=X_colnames)
         ax = fig.add_subplot(subplt_rows, subplt_cols, subplt_count + 1)
-        ax.set_title(y_colnames[subplt_count])
+        ax.set_title(y_colnames[subplt_count], fontsize=16)
         bp = sns.barplot(data=df, ax=ax)
         bp.tick_params(labelsize=14)
         subplt_count += 1
